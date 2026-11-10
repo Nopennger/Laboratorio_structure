@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laboratorio virtual de flexión - Universidad Mayor</title>
+  <meta name="description" content="Laboratorio virtual para explorar la flexión de una viga simplemente apoyada y analizar sus resultados.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-amber-50 text-slate-800 font-sans min-h-screen flex flex-col">
+  <header class="bg-white border-b-2 border-yellow-500 px-4 sm:px-6 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between shadow-sm">
+    <div class="flex items-center gap-3">
+      <img src="assets/logo-universidad-mayor.webp" alt="Logo de la Universidad Mayor" class="h-9 w-auto max-w-[130px] object-contain">
+      <div>
+        <h1 class="text-lg font-bold text-slate-900 leading-none">Laboratorio virtual de flexión</h1>
+        <span class="text-xs text-slate-500">Universidad Mayor · Mecánica de materiales</span>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="switchTab('simulator')" id="btn-sim" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-yellow-500 text-slate-900 transition" aria-current="page">Laboratorio</button>
+      <button onclick="switchTab('guide')" id="btn-gui" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Guía y modelo</button>
+    </div>
+  </header>
+  <main class="p-4 sm:p-6 max-w-[1400px] w-full mx-auto flex-1 flex flex-col">
+    <section id="view-welcome" class="bg-white rounded-2xl p-6 sm:p-10 border border-yellow-200 shadow-sm">
+      <p class="text-sm font-bold uppercase tracking-widest text-yellow-700">Experimento interactivo · 10–15 minutos</p>
+      <h2 class="mt-3 text-3xl sm:text-4xl font-black text-slate-900">¿Cómo se flexiona una viga?</h2>
+      <p class="mt-4 max-w-3xl text-slate-600 leading-relaxed">Explora cómo la carga, la longitud del vano y el material modifican la deformación y los esfuerzos de una viga simplemente apoyada. Cambia las condiciones, observa los gráficos y termina con una conclusión basada en tus resultados.</p>
+      <div class="mt-6 grid gap-3 sm:grid-cols-3">
+        <div class="rounded-xl bg-amber-50 p-4"><span class="font-bold text-slate-900">1. Configura</span><p class="mt-1 text-sm text-slate-600">Elige carga, longitud y material.</p></div>
+        <div class="rounded-xl bg-amber-50 p-4"><span class="font-bold text-slate-900">2. Explora</span><p class="mt-1 text-sm text-slate-600">Compara la deformada, el cortante y el momento.</p></div>
+        <div class="rounded-xl bg-amber-50 p-4"><span class="font-bold text-slate-900">3. Concluye</span><p class="mt-1 text-sm text-slate-600">Interpreta los valores calculados.</p></div>
+      </div>
+      <button onclick="beginExperiment()" class="mt-8 rounded-xl bg-yellow-500 px-6 py-3 font-bold text-slate-900 shadow-sm transition hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:ring-offset-2">Iniciar experimento</button>
+      <p class="mt-3 text-xs text-slate-500">No necesitas crear una cuenta ni instalar programas.</p>
+    </section>
+    <div id="view-simulator" class="hidden flex-1">
+      <section class="mb-6 rounded-2xl bg-white p-4 shadow-sm border border-slate-200" aria-label="Progreso del experimento">
+        <ol class="grid grid-cols-3 gap-2 text-center text-xs sm:text-sm">
+          <li id="step-1" class="rounded-lg bg-yellow-100 p-2 font-bold text-yellow-900" aria-current="step">1. Configura</li>
+          <li id="step-2" class="rounded-lg bg-slate-100 p-2 text-slate-500">2. Explora resultados</li>
+          <li id="step-3" class="rounded-lg bg-slate-100 p-2 text-slate-500">3. Concluye</li>
+        </ol>
+        <p id="experiment-status" class="mt-3 text-sm text-slate-600" aria-live="polite">Ajusta los parámetros para investigar cómo responde la viga.</p>
+      </section>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <aside class="lg:col-span-4 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between gap-6">
+        <div class="space-y-6">
+          <div class="flex items-center gap-2 text-slate-700 font-bold border-b border-slate-100 pb-3">
+            <i class="fa-solid fa-sliders text-yellow-600"></i>
+            <h2>Parámetros del Sistema</h2>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-sm font-semibold text-slate-700">Carga Puntual (P)</span>
+              <span id="label-P" class="text-sm font-bold text-yellow-700">16 kN</span>
+            </div>
+            <input id="slider-P" type="range" min="1" max="50" step="1" value="16" aria-label="Carga puntual en kilonewtons" class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer accent-yellow-500">
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-sm font-semibold text-slate-700">Longitud del Vano (L)</span>
+              <span id="label-L" class="text-sm font-bold text-yellow-700">4.5 m</span>
+            </div>
+            <input id="slider-L" type="range" min="2" max="12" step="0.5" value="4.5" aria-label="Longitud del vano en metros" class="w-full h-2 bg-slate-200 rounded-lg cursor-pointer accent-yellow-500">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1">Material (Módulo E)</label>
+            <select id="select-E" aria-label="Material de la viga" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700">
+              <option value="200">Acero (E = 200 GPa)</option>
+              <option value="70">Aluminio (E = 70 GPa)</option>
+              <option value="12">Madera (E = 12 GPa)</option>
+              <option value="25">Concreto (E = 25 GPa)</option>
+            </select>
+          </div>
+          <div class="bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs space-y-1">
+            <div>Apoyos: <span class="font-semibold">simplemente apoyada</span></div>
+            <div>Sección rectangular: <span class="font-semibold">b = 0,10 m; h = 0,20 m</span></div>
+            <div>Inercia (I): <span class="font-semibold">6,67 × 10⁻⁵ m⁴</span></div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 pt-4 border-t border-slate-100 text-center">
+          <div class="bg-slate-50 rounded-xl p-2">
+            <div class="text-[10px] uppercase font-bold text-slate-400">Cortante máx. (V)</div>
+            <div id="stat-v" class="text-sm font-black text-slate-800">8.0 kN</div>
+          </div>
+          <div class="bg-slate-50 rounded-xl p-2">
+            <div class="text-[10px] uppercase font-bold text-slate-400">Momento máx. (M)</div>
+            <div id="stat-m" class="text-sm font-black text-slate-800">18.0 kNm</div>
+          </div>
+        </div>
+      </aside>
+      <section class="lg:col-span-8 flex flex-col gap-6">
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-sm font-bold text-slate-700">Comportamiento Elástico en Tiempo Real</h3>
+            <span class="text-xs text-slate-400 italic">Deflexión magnificada</span>
+          </div>
+          <div class="w-full h-40 bg-slate-50 rounded-xl relative overflow-hidden border border-slate-100">
+            <canvas id="beamCanvas" role="img" aria-label="Deformada cualitativa y magnificada de una viga simplemente apoyada con carga central" class="w-full h-full"></canvas>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col">
+            <h3 class="text-xs font-bold text-slate-500 uppercase mb-1">Cortante y momento flector</h3>
+            <p class="mb-3 text-xs text-slate-500">V [kN] y M [kN·m] a lo largo del vano.</p>
+            <div class="h-40 relative"><canvas id="chartDiagrams" role="img" aria-label="Diagramas de cortante en kilonewtons y momento flector en kilonewton metro, en función de la posición en metros"></canvas></div>
+          </div>
+          <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+            <h3 class="text-xs font-bold text-slate-500 uppercase mb-3">Resultados del modelo</h3>
+            <table class="w-full text-xs">
+              <thead><tr class="text-slate-400 border-b border-slate-100"><th class="pb-2 text-left">Resultado</th><th class="pb-2 text-right">Valor calculado</th></tr></thead>
+              <tbody><tr><td class="py-2 text-slate-700">Deflexión central (δ)</td><td id="table-deflection" class="py-2 text-right font-bold text-yellow-700">2.28 mm</td></tr>
+              <tr><td class="py-2 text-slate-700">Cortante máximo (|V|)</td><td id="table-v" class="py-2 text-right font-semibold text-slate-600">8.0 kN</td></tr>
+              <tr><td class="py-2 text-slate-700">Momento máximo (M)</td><td id="table-m" class="py-2 text-right font-semibold text-slate-600">18.0 kN·m</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+      </div>
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <button id="finish-button" onclick="finishExperiment()" class="rounded-xl bg-slate-900 px-5 py-3 font-bold text-white transition hover:bg-slate-700">Finalizar y ver conclusión</button>
+        <button onclick="resetExperiment()" class="rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50">Reiniciar experimento</button>
+      </div>
+      <section id="conclusion-panel" class="hidden mt-6 rounded-2xl border border-yellow-300 bg-white p-6 shadow-sm" aria-live="polite">
+        <p class="text-sm font-bold uppercase tracking-widest text-yellow-700">Conclusión de la experiencia</p>
+        <h2 class="mt-2 text-xl font-bold text-slate-900">Interpreta el resultado</h2>
+        <p id="conclusion-text" class="mt-3 leading-relaxed text-slate-700"></p>
+        <p class="mt-4 text-xs text-slate-500">Este modelo elástico lineal no verifica resistencia, pandeo, fisuración ni condiciones reales de diseño.</p>
+      </section>
+    </div>
+    <div id="view-guide" class="hidden bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+      <h2 class="text-xl font-bold text-slate-900 border-b pb-3">Guía de uso y modelo físico</h2>
+      <div class="space-y-4 text-sm text-slate-700">
+        <h3 class="font-bold text-yellow-700">Procedimiento</h3>
+        <ol class="list-decimal list-inside space-y-1 pl-2">
+          <li>Selecciona <strong>Iniciar experimento</strong>.</li>
+          <li>Define la carga puntual P, la longitud del vano L y el material de la viga.</li>
+          <li>Observa cómo cambian la deformada, el cortante, el momento y la tabla de resultados.</li>
+          <li>Compara al menos dos configuraciones y selecciona <strong>Finalizar y ver conclusión</strong>.</li>
+          <li>Reinicia para probar una nueva combinación.</li>
+        </ol>
+        <h3 class="font-bold text-yellow-700 pt-2">Pregunta de investigación</h3>
+        <p>¿Cómo influyen la carga puntual, la luz de la viga y la rigidez del material en la deflexión central, el cortante y el momento flector?</p>
+        <h3 class="font-bold text-yellow-700 pt-2">Modelo y variables</h3>
+        <p>Viga prismática simplemente apoyada, con una carga puntual centrada y comportamiento elástico lineal. La sección rectangular se mantiene fija: b = 0,10 m, h = 0,20 m e I = bh³/12 = 6,67 × 10⁻⁵ m⁴.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full border-collapse text-left text-xs sm:text-sm">
+            <thead class="bg-slate-50 text-slate-600"><tr><th class="border p-2">Variable</th><th class="border p-2">Tipo</th><th class="border p-2">Unidad SI</th><th class="border p-2">Rango o valor</th></tr></thead>
+            <tbody>
+              <tr><td class="border p-2">Carga P</td><td class="border p-2">Independiente</td><td class="border p-2">N (interfaz: kN)</td><td class="border p-2">1–50 kN</td></tr>
+              <tr><td class="border p-2">Longitud L</td><td class="border p-2">Independiente</td><td class="border p-2">m</td><td class="border p-2">2–12 m</td></tr>
+              <tr><td class="border p-2">Módulo E</td><td class="border p-2">Independiente</td><td class="border p-2">Pa (interfaz: GPa)</td><td class="border p-2">12, 25, 70 o 200 GPa</td></tr>
+              <tr><td class="border p-2">Inercia I</td><td class="border p-2">Controlada</td><td class="border p-2">m⁴</td><td class="border p-2">6,67 × 10⁻⁵ m⁴</td></tr>
+              <tr><td class="border p-2">Deflexión δ</td><td class="border p-2">Dependiente</td><td class="border p-2">m (interfaz: mm)</td><td class="border p-2">Calculada</td></tr>
+              <tr><td class="border p-2">Cortante V y momento M</td><td class="border p-2">Dependientes</td><td class="border p-2">N y N·m (interfaz: kN y kN·m)</td><td class="border p-2">Calculados</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+          <h3 class="font-bold text-yellow-900">Ecuaciones utilizadas</h3>
+          <p class="mt-2 font-mono text-slate-800">V<sub>máx</sub> = P/2 · M<sub>máx</sub> = PL/4 · δ<sub>centro</sub> = PL³/(48EI)</p>
+          <p class="mt-2 text-slate-600">El cálculo convierte internamente P de kN a N, E de GPa a Pa y la deflexión final de m a mm. Los materiales son valores didácticos aproximados, no parámetros de diseño.</p>
+        </div>
+        <h3 class="font-bold text-yellow-700 pt-2">Recorrido de los datos y tecnologías</h3>
+        <p>Controles del usuario (P, L y E) → cálculo en JavaScript en el navegador → resultados teóricos → visualización en canvas y Chart.js. No se conecta a sensores ni a un servidor; los datos son una simulación reproducible.</p>
+        <p><strong>Interfaz:</strong> HTML5, Tailwind CSS por CDN, JavaScript y Chart.js por CDN. Para cargar los estilos y gráficos se requiere conexión a internet.</p>
+        <h3 class="font-bold text-yellow-700 pt-2">Duración estimada</h3>
+        <p>Exploración rápida: 2–4 minutos. Experiencia completa con comparación y conclusión: 10–15 minutos.</p>
+        <p class="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">Alcance: modelo educativo de una viga simplemente apoyada con carga central. No reemplaza un análisis estructural ni una verificación de diseño.</p>
+      </div>
+    </div>
+  </main>
+  <script>
+    const welcomeView = document.getElementById('view-welcome');
+    const simulatorView = document.getElementById('view-simulator');
+    const guideView = document.getElementById('view-guide');
+    const buttonSimulator = document.getElementById('btn-sim');
+    const buttonGuide = document.getElementById('btn-gui');
+    const sliderP = document.getElementById('slider-P');
+    const sliderL = document.getElementById('slider-L');
+    const selectE = document.getElementById('select-E');
+    const labelP = document.getElementById('label-P');
+    const labelL = document.getElementById('label-L');
+    const statV = document.getElementById('stat-v');
+    const statM = document.getElementById('stat-m');
+    const tableDeflection = document.getElementById('table-deflection');
+    const tableV = document.getElementById('table-v');
+    const tableM = document.getElementById('table-m');
+    const canvas = document.getElementById('beamCanvas');
+    const ctx = canvas.getContext('2d');
+    const status = document.getElementById('experiment-status');
+    const conclusionPanel = document.getElementById('conclusion-panel');
+    const conclusionText = document.getElementById('conclusion-text');
+    const inertia = 0.0000667;
+    let experimentStarted = false;
+    let experimentFinished = false;
+    let hasExploredResults = false;
+
+    const diagramChart = new Chart(document.getElementById('chartDiagrams').getContext('2d'), {
+      type: 'line',
+      data: {
+        datasets: [
+          { label: 'Momento flector M [kN·m]', data: [], borderColor: '#eab308', backgroundColor: 'rgba(234, 179, 8, 0.15)', fill: true, yAxisID: 'yM', tension: 0, pointRadius: 2 },
+          { label: 'Cortante V [kN]', data: [], borderColor: '#10b981', borderDash: [4, 4], yAxisID: 'yV', tension: 0, pointRadius: 0 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { type: 'linear', min: 0, grid: { display: false }, title: { display: true, text: 'Posición x [m]' } },
+          yM: { type: 'linear', position: 'left', title: { display: true, text: 'M [kN·m]' } },
+          yV: { type: 'linear', position: 'right', grid: { display: false }, title: { display: true, text: 'V [kN]' } }
+        },
+        plugins: { legend: { labels: { boxWidth: 10, font: { size: 10 } } } }
+      }
+    });
+
+    function setStep(activeStep) {
+      for (let step = 1; step <= 3; step++) {
+        const element = document.getElementById(`step-${step}`);
+        const isActive = step === activeStep;
+        const isComplete = step < activeStep;
+        element.className = isActive
+          ? 'rounded-lg bg-yellow-100 p-2 font-bold text-yellow-900'
+          : isComplete
+            ? 'rounded-lg bg-green-100 p-2 font-semibold text-green-800'
+            : 'rounded-lg bg-slate-100 p-2 text-slate-500';
+        if (isActive) element.setAttribute('aria-current', 'step');
+        else element.removeAttribute('aria-current');
+      }
+    }
+
+    function switchTab(tab) {
+      const showGuide = tab === 'guide';
+      guideView.classList.toggle('hidden', !showGuide);
+      welcomeView.classList.toggle('hidden', showGuide || experimentStarted);
+      simulatorView.classList.toggle('hidden', showGuide || !experimentStarted);
+      buttonGuide.className = showGuide
+        ? 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-yellow-500 text-slate-900 transition'
+        : 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
+      buttonSimulator.className = showGuide
+        ? 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition'
+        : 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-yellow-500 text-slate-900 transition';
+      if (showGuide) {
+        buttonGuide.setAttribute('aria-current', 'page');
+        buttonSimulator.removeAttribute('aria-current');
+      } else {
+        buttonSimulator.setAttribute('aria-current', 'page');
+        buttonGuide.removeAttribute('aria-current');
+      }
+      if (!showGuide && experimentStarted) {
+        requestAnimationFrame(() => {
+          resizeCanvas();
+          diagramChart.resize();
+          calculate();
+        });
+      }
+    }
+
+    function beginExperiment() {
+      experimentStarted = true;
+      hasExploredResults = false;
+      experimentFinished = false;
+      welcomeView.classList.add('hidden');
+      guideView.classList.add('hidden');
+      simulatorView.classList.remove('hidden');
+      conclusionPanel.classList.add('hidden');
+      status.textContent = 'Ajusta los parámetros para investigar cómo responde la viga.';
+      setStep(1);
+      switchTab('simulator');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function markResultsExplored() {
+      if (!experimentStarted) return;
+      hasExploredResults = true;
+      experimentFinished = false;
+      conclusionPanel.classList.add('hidden');
+      setStep(2);
+      status.textContent = 'Resultados actualizados. Compara los diagramas y valores antes de concluir.';
+    }
+
+    function finishExperiment() {
+      if (!experimentStarted) return;
+      if (!hasExploredResults) {
+        status.textContent = 'Cambia al menos un parámetro y observa los resultados antes de finalizar.';
+        return;
+      }
+      experimentFinished = true;
+      setStep(3);
+      status.textContent = 'Experimento finalizado. Revisa la conclusión o reinicia para probar otra configuración.';
+      updateConclusion();
+      conclusionPanel.classList.remove('hidden');
+      conclusionPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function resetExperiment() {
+      sliderP.value = '16';
+      sliderL.value = '4.5';
+      selectE.value = '200';
+      experimentFinished = false;
+      hasExploredResults = false;
+      conclusionPanel.classList.add('hidden');
+      setStep(1);
+      status.textContent = 'Experimento reiniciado. Ajusta los parámetros para comenzar una nueva exploración.';
+      calculate();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resizeCanvas() {
+      const width = canvas.parentElement.clientWidth;
+      const height = canvas.parentElement.clientHeight;
+      if (width === 0 || height === 0) return;
+      canvas.width = width;
+      canvas.height = height;
+    }
+
+    function calculate() {
+      const loadKN = Number(sliderP.value);
+      const spanM = Number(sliderL.value);
+      const modulusGPa = Number(selectE.value);
+      const modulusPa = modulusGPa * 1e9;
+      const shearKN = loadKN / 2;
+      const momentKNm = loadKN * spanM / 4;
+      const deflectionMM = (loadKN * 1000 * spanM ** 3 / (48 * modulusPa * inertia)) * 1000;
+
+      labelP.textContent = `${loadKN} kN`;
+      labelL.textContent = `${spanM.toFixed(1)} m`;
+      statV.textContent = tableV.textContent = `${shearKN.toFixed(1)} kN`;
+      statM.textContent = tableM.textContent = `${momentKNm.toFixed(1)} kN·m`;
+      tableDeflection.textContent = `${deflectionMM.toFixed(2)} mm`;
+      draw(spanM, loadKN, deflectionMM);
+      diagramChart.data.datasets[0].data = [
+        { x: 0, y: 0 },
+        { x: spanM / 2, y: momentKNm },
+        { x: spanM, y: 0 }
+      ];
+      diagramChart.data.datasets[1].data = [
+        { x: 0, y: shearKN },
+        { x: spanM / 2, y: shearKN },
+        { x: spanM / 2, y: -shearKN },
+        { x: spanM, y: -shearKN }
+      ];
+      diagramChart.options.scales.x.max = spanM;
+      diagramChart.update('none');
+      if (experimentFinished) updateConclusion();
+    }
+
+    function updateConclusion() {
+      const loadKN = Number(sliderP.value);
+      const spanM = Number(sliderL.value);
+      const modulusGPa = Number(selectE.value);
+      const material = selectE.options[selectE.selectedIndex].text.split(' (')[0];
+      const deflectionMM = Number.parseFloat(tableDeflection.textContent);
+      const momentKNm = Number.parseFloat(tableM.textContent);
+      const shearKN = Number.parseFloat(tableV.textContent);
+      conclusionText.textContent = `Para P = ${loadKN} kN, L = ${spanM.toFixed(1)} m y ${material} (E = ${modulusGPa} GPa), el modelo estima una deflexión central de ${deflectionMM.toFixed(2)} mm, un cortante máximo de ${shearKN.toFixed(1)} kN y un momento máximo de ${momentKNm.toFixed(1)} kN·m. La ecuación muestra que la deflexión aumenta con P y con el cubo de L, y disminuye al aumentar E o I.`;
+    }
+
+    function draw(spanM, loadKN, deflectionMM) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const width = canvas.width;
+      const height = canvas.height;
+      const margin = 60;
+      const centerY = height / 2 - 10;
+      const visualDeflection = Math.min(Math.max(deflectionMM * 10, 8), 40);
+      ctx.beginPath();
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.moveTo(margin, centerY);
+      ctx.lineTo(width - margin, centerY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.strokeStyle = '#eab308';
+      ctx.lineWidth = 5;
+      ctx.moveTo(margin, centerY);
+      ctx.quadraticCurveTo(width / 2, centerY + visualDeflection * 2, width - margin, centerY);
+      ctx.stroke();
+      ctx.fillStyle = '#64748b';
+      ctx.beginPath();
+      ctx.moveTo(margin, centerY + 3);
+      ctx.lineTo(margin - 8, centerY + 18);
+      ctx.lineTo(margin + 8, centerY + 18);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(width - margin, centerY + 3);
+      ctx.lineTo(width - margin - 8, centerY + 18);
+      ctx.lineTo(width - margin + 8, centerY + 18);
+      ctx.fill();
+      ctx.strokeStyle = '#ef4444';
+      ctx.fillStyle = '#ef4444';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(width / 2, centerY + visualDeflection - 30);
+      ctx.lineTo(width / 2, centerY + visualDeflection);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(width / 2, centerY + visualDeflection);
+      ctx.lineTo(width / 2 - 4, centerY + visualDeflection - 6);
+      ctx.lineTo(width / 2 + 4, centerY + visualDeflection - 6);
+      ctx.fill();
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`P = ${loadKN} kN`, width / 2, centerY + visualDeflection - 35);
+      ctx.fillStyle = '#64748b';
+      ctx.fillText(`L = ${spanM.toFixed(1)} m`, width / 2, height - 8);
+    }
+
+    [sliderP, sliderL, selectE].forEach((control) => {
+      control.addEventListener('input', () => {
+        calculate();
+        if (experimentStarted) markResultsExplored();
+      });
+    });
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      if (experimentStarted) calculate();
+    });
+    calculate();
+  </script>
+</body>
+</html>

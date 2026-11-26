@@ -7,7 +7,8 @@ Aplicación web educativa para estudiar la flexión de una viga prismática simp
 - Flujo guiado: iniciar, configurar, explorar resultados y concluir.
 - Controles interactivos para la carga puntual `P`, la longitud del vano `L` y el módulo elástico `E`.
 - Visualización de la deformada cualitativa, diagramas de cortante y momento, y resultados numéricos con unidades.
-- Guía de uso, modelo físico, variables, ecuaciones y limitaciones.
+- Conclusión calculada que resume la configuración usada, muestra deflexión, cortante y momento, y explica cómo influyen la carga, el vano y el material.
+- Guía de usuario con instrucciones para realizar el experimento y sección desplegable con el modelo físico, variables y ecuaciones.
 - Diseño adaptable a teléfonos y computadores. No necesita cuenta ni servidor.
 
 ## Abrir la aplicación
@@ -18,22 +19,17 @@ No requiere compilación ni instalación de dependencias.
 2. Abre `index.html` en un navegador moderno.
 3. Ten conexión a internet para que se carguen Tailwind CSS y Chart.js desde sus CDN.
 
-Opcionalmente, inicia un servidor local en la carpeta del proyecto:
-
-```powershell
-py -m http.server 8000
-```
-
-Abre <http://localhost:8000>. Si Python no está instalado, puedes abrir `index.html` directamente.
-
 ## Uso del laboratorio
 
-1. Pulsa **Iniciar experimento**.
-2. Cambia uno o más parámetros: carga `P`, longitud `L` y material.
-3. Compara los gráficos y resultados actualizados.
-4. Pulsa **Finalizar y ver conclusión**.
-5. Pulsa **Reiniciar experimento** para probar otra configuración.
-6. Consulta **Guía y modelo** para revisar el procedimiento y las ecuaciones.
+1. Al abrir la aplicación, revisa la guía de usuario.
+2. Al final de la guía, pulsa **Entendido, comenzar experimento**.
+3. Cambia uno o más parámetros: carga `P`, longitud `L` y material.
+4. Compara los gráficos y resultados actualizados.
+5. Pulsa **Finalizar y ver conclusión** para revisar los resultados y su interpretación.
+6. Pulsa **Reiniciar experimento** para probar otra configuración.
+7. Usa **Guía de usuario** en la navegación para volver a consultar el procedimiento; despliega **Consultar modelo físico y detalles del experimento** para ver la información técnica.
+
+La conclusión compara los resultados actuales con la configuración inicial del laboratorio: carga de 16 kN, vano de 4,5 m y acero (E = 200 GPa). Los valores iniciales de referencia son 2,28 mm de deflexión, 8,0 kN de cortante y 18,0 kN·m de momento. Esta comparación es educativa y no constituye una verificación de diseño.
 
 ## Modelo físico
 
@@ -72,4 +68,4 @@ Es un modelo educativo y no verifica resistencia, pandeo, fisuración ni condici
 - `index.html`: aplicación web.
 - `assets/logo-universidad-mayor.webp`: logo institucional.
 
-El logo se obtuvo del [sitio oficial de la Universidad Mayor](https://www.umayor.cl/um/bundles/umayor/images/header-logo.webp). Respeta sus directrices de marca y confirma que su uso esté autorizado.
+El logo se obtuvo del [sitio oficial de la Universidad Mayor](https://www.umayor.cl/um/bundles/umayor/images/header-logo.webp).
